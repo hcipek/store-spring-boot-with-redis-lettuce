@@ -1,5 +1,6 @@
-package com.ebebek.reactiveredis.hello;
+package com.ebebek.reactiveredis.config;
 
+import com.ebebek.reactiveredis.model.Store;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
@@ -10,15 +11,15 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
-public class CoffeeConfiguration {
+public class StoreConfiguration {
     @Bean
-    ReactiveRedisOperations<String, Coffee> redisOperations(ReactiveRedisConnectionFactory factory) {
-        Jackson2JsonRedisSerializer<Coffee> serializer = new Jackson2JsonRedisSerializer<>(Coffee.class);
+    ReactiveRedisOperations<String, Store> redisOperations(ReactiveRedisConnectionFactory factory) {
+        Jackson2JsonRedisSerializer<Store> serializer = new Jackson2JsonRedisSerializer<>(Store.class);
 
-        RedisSerializationContext.RedisSerializationContextBuilder<String, Coffee> builder =
+        RedisSerializationContext.RedisSerializationContextBuilder<String, Store> builder =
                 RedisSerializationContext.newSerializationContext(new StringRedisSerializer());
 
-        RedisSerializationContext<String, Coffee> context = builder.value(serializer).build();
+        RedisSerializationContext<String, Store> context = builder.value(serializer).build();
 
         return new ReactiveRedisTemplate<>(factory, context);
     }

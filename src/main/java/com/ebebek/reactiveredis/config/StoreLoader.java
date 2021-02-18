@@ -1,28 +1,27 @@
-package com.ebebek.reactiveredis.hello;
+package com.ebebek.reactiveredis.config;
 
+import com.ebebek.reactiveredis.model.Store;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
 
 import javax.annotation.PostConstruct;
-import java.util.UUID;
 
 @Component
-public class CoffeeLoader {
+public class StoreLoader {
     private final ReactiveRedisConnectionFactory factory;
-    private final ReactiveRedisOperations<String, Coffee> coffeeOps;
+    private final ReactiveRedisOperations<String, Store> storeOps;
 
-    public CoffeeLoader(ReactiveRedisConnectionFactory factory, ReactiveRedisOperations<String, Coffee> coffeeOps) {
+    public StoreLoader(ReactiveRedisConnectionFactory factory, ReactiveRedisOperations<String, Store> storeOps) {
         this.factory = factory;
-        this.coffeeOps = coffeeOps;
+        this.storeOps = storeOps;
     }
 
     @PostConstruct
     public void loadData() {
-        factory.getReactiveConnection().ping();
-//                .serverCommands()
-//        .flushAll()
+        factory.getReactiveConnection()
+                .serverCommands()
+        .flushAll();
 //        .thenMany(
 //            Flux.just("Jet Black Redis", "Darth Redis", "Black Alert Redis")
 //                .map(name -> new Coffee(UUID.randomUUID().toString(), name))
