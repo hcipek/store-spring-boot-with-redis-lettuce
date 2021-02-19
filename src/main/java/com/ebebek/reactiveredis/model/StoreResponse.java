@@ -1,13 +1,15 @@
-package com.ebebek.reactiveredis.hello;
+package com.ebebek.reactiveredis.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Coffee {
-    private String id;
-    private String name;
+public class StoreResponse {
+
+    private List<Store> results;
 }
