@@ -5,14 +5,16 @@ import com.ebebek.reactiveredis.model.StoreResponse;
 import org.apache.commons.text.RandomStringGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.core.ReactiveRedisOperations;
-import org.springframework.data.redis.core.ReactiveValueOperations;
+import org.springframework.data.redis.core.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.Resource;
 import java.io.Serializable;
+import java.net.URL;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -21,34 +23,29 @@ public class StoreController implements Serializable {
     @Autowired
     private RestTemplate restTemplate;
 
-    private final ReactiveRedisOperations<String, Store> storeOps;
-    private final ReactiveValueOperations<String, Store> storeValueOps;
+    // inject the actual template
+    @Autowired
+    private RedisTemplate<String, Store> redisTemplate;
+    // string based redis template
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+    // inject the template as ListOperations
+    @Resource(name="redisTemplate")
+    private ListOperations<String, Store> listOps;
+
+
+    public void addLink(String userId, Store store) {
+        listOps.leftPush(userId, store);
+//        template.opsForList().leftPush(userId, store);
+    }
+
     private RandomStringGenerator generator = new RandomStringGenerator.Builder()
             .withinRange('a', 'z')
             .build();
 
-    StoreController(ReactiveRedisOperations<String, Store> storeOps) {
-        this.storeOps = storeOps;
-        this.storeValueOps = this.storeOps.opsForValue();
-    }
-
-    @GetMapping("/getAllKeys")
-    public Flux<Store> getAllKeys() {
-        return storeOps.keys("*")
-                .flatMap(storeOps.opsForValue()::get);
-    }
-
-    @GetMapping("/get")
-    public Mono<Store> getById(@RequestParam("key") String key) {
-        return storeOps.opsForValue().get(key);
-    }
-
-    @Cacheable("'store'")
     @GetMapping("/getAll")
-    public Flux<Store> getAll() {
+    public List<Store> getAll() {
         StoreResponse response = restTemplate.getForObject("http://localhost:9081/api/store/getall", StoreResponse.class);
-        response.getResults().forEach(e -> storeValueOps.set(e.getId().toString(), e));
-        Flux<Store> storeFlux = Flux.fromIterable(response.getResults());
-        return storeFlux;
+        return null;
     }
 }
