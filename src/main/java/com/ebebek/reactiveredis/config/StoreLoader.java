@@ -11,13 +11,17 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 
 @Component
+@EnableScheduling
 public class StoreLoader {
     private final RedisConnectionFactory factory;
+
+    private RedisTemplate redisTemplate;
 
     public StoreLoader(RedisConnectionFactory factory) {
         this.factory = factory;
@@ -45,7 +49,7 @@ public class StoreLoader {
 //                .withAuthentication("username","password")
                 .withDatabase(1)
                 .build();
-//        uri = new RedisURI("localhost", 6379, Duration.ofSeconds(60));
+
         return uri;
 
     }
@@ -55,8 +59,10 @@ public class StoreLoader {
         final RedisTemplate template = new RedisTemplate();
         template.setConnectionFactory(factory);
         template.setValueSerializer(serializerSetup());
+//        template.setHashValueSerializer();
+//        template.setKeySerializer();
+//        template.setHashKeySerializer();
         template.afterPropertiesSet();
-
         return template;
     }
 

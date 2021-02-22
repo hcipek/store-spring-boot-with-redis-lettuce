@@ -1,5 +1,6 @@
 package com.ebebek.reactiveredis.model.product;
 
+import com.ebebek.reactiveredis.model.BaseModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +11,7 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Product implements Serializable {
+public class Product extends BaseModel {
 
     private Long id;
     private String name;
