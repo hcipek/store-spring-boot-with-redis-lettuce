@@ -26,40 +26,75 @@ import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/redis/cart")
-public class CartController {
+public class CartController implements Serializable {
 
     @Autowired
-    private CartService cartService;
+    private RestTemplate restTemplate;
+    // inject the actual template
+    @Autowired
+    private RedisTemplate<String, Cart> redisTemplate;
+    // string based redis template
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+    // string based redis template
+
+    private HashOperations<String, String, Cart> hashOperations;
+
+    public CartController(StringRedisTemplate stringRedisTemplate) {
+        hashOperations = stringRedisTemplate.opsForHash();
+    }
+
+    private static final String CARTS_KEY = "Carts";
 
     @PostMapping("/createCart")
     public CartResponse createCart(@RequestBody CartRequest request) {
-        return cartService.createCart(request);
+        Cart cart = request.getCart();
+        cart.setId(UUID.randomUUID().toString());
+        Map<String, Cart> cartMap = Stream.of(
+                new AbstractMap.SimpleEntry<>(cart.getId(), cart)
+        ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        hashOperations.putAll(CARTS_KEY, cartMap);
+        return new CartResponse(Collections.singletonList(cart), ResponseCodesUtil.SUCCESS.message, ResponseCodesUtil.SUCCESS.code);
     }
 
     @GetMapping("/getAllCarts")
     public List<Cart> getAllCarts() {
-        return cartService.getAllCarts();
+        return hashOperations.values(CARTS_KEY);
     }
 
     @GetMapping("/getCartById")
-    public Cart getCartById(@RequestParam("id") String id) {
-        return cartService.getCartById(id);
+    public Object getCartById(@RequestParam("id") String id) {
+        return hashOperations.get(CARTS_KEY, id);
     }
 
     @PostMapping("/modifyCart")
-    public CartResponse modifyCart(@RequestBody CartRequest request) {
-        return cartService.modifyCart(request);
+    private CartResponse modifyCart(@RequestBody CartRequest request) {
+        hashOperations.put(CARTS_KEY, request.getCart().getId(), request.getCart());
+        return new CartResponse(null, ResponseCodesUtil.SUCCESS.message, ResponseCodesUtil.SUCCESS.code);
     }
 
     @PostMapping("/incrementProductCount")
-    public CartResponse incrementProductCount(@RequestBody ProductRequest request) {
-        return cartService.incrementProductCount(request);
+    private CartResponse incrementProductCount(@RequestBody ProductRequest request) {
+        Map<String, Cart> cartMap = hashOperations.entries(CARTS_KEY);
+        Cart cart = hashOperations.get(CARTS_KEY, request.getCartId());
+        cartMap.get(request.getCartId()).getCartItemList().stream()
+                .filter(e -> e.getProduct().getId().equals(request.getProductId()))
+                .findFirst()
+                .get()
+                .increment();
+        redisTemplate.opsForHash().put(CARTS_KEY, request.getCartId(), cartMap.get(request.getCartId()));
+        return new CartResponse(null, ResponseCodesUtil.SUCCESS.message, ResponseCodesUtil.SUCCESS.code);
     }
 
     @PostMapping("/decrementProductCount")
-    public CartResponse decrementProductCount(@RequestBody ProductRequest request) {
-        return cartService.decrementProductCount(request);
+    private CartResponse decrementProductCount(@RequestBody ProductRequest request) {
+        Cart cart = (Cart)hashOperations.get(CARTS_KEY, request.getCartId());
+        cart.getCartItemList().stream()
+                .filter(e -> e.getProduct().getId().equals(request.getProductId()))
+                .findFirst()
+                .get()
+                .decrement();
+        redisTemplate.opsForHash().put(CARTS_KEY, cart.getId(), cart);
+        return new CartResponse(null, ResponseCodesUtil.SUCCESS.message, ResponseCodesUtil.SUCCESS.code);
     }
-
-
 }
