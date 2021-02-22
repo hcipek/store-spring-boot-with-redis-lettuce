@@ -1,17 +1,20 @@
-package com.ebebek.reactiveredis.model;
+package com.ebebek.reactiveredis.model.product;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Store implements Serializable {
+public class Product implements Serializable {
+
     private Long id;
     private String name;
-    private String location;
-    private Stock stock;
+    private String size;
+    private BigDecimal weight;
+
 }

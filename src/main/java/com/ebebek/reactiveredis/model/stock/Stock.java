@@ -1,5 +1,6 @@
-package com.ebebek.reactiveredis.model;
+package com.ebebek.reactiveredis.model.stock;
 
+import com.ebebek.reactiveredis.model.product.Product;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
