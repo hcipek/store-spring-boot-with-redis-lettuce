@@ -22,14 +22,4 @@ public class ReactiveRedisApplication {
 		return new RestTemplate();
 	}
 
-	@Bean
-	public RedisTemplate getRedisTemplate() {
-			return new RedisTemplate();
-	}
-	//For port configuration
-//	@Bean
-//	public ReactiveRedisConnectionFactory reactiveRedisConnectionFactory() {
-//		return new LettuceConnectionFactory("localhost", 6379);
-//	}
-
 }

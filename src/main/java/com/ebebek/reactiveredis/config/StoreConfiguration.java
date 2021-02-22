@@ -1,24 +1,17 @@
 package com.ebebek.reactiveredis.config;
 
-import com.ebebek.reactiveredis.model.Store;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.*;
-import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.data.redis.core.ReactiveRedisOperations;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.RedisSerializationContext;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 public class StoreConfiguration {
 
     @Bean
-    public LettuceConnectionFactory redisConnectionFactory() {
+    public RedisConnectionFactory redisConnectionFactory() {
 
-        return new LettuceConnectionFactory(new RedisStandaloneConfiguration("server", 6379));
+        return new LettuceConnectionFactory();
     }
 
 //    WriteToMasterReadFromReplicaConfiguration
