@@ -10,6 +10,7 @@ import com.ebebek.reactiveredis.model.store.Store;
 import com.ebebek.reactiveredis.model.store.StoreRequest;
 import com.ebebek.reactiveredis.model.store.StoreResponse;
 import com.ebebek.reactiveredis.model.ui.store.UIStoreRequest;
+import com.ebebek.reactiveredis.service.CartService;
 import com.ebebek.reactiveredis.util.ResponseCodesUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
@@ -96,6 +97,4 @@ public class CartController implements Serializable {
         redisTemplate.opsForHash().put(CARTS_KEY, cart.getId(), cart);
         return new CartResponse(null, ResponseCodesUtil.SUCCESS.message, ResponseCodesUtil.SUCCESS.code);
     }
-
-
 }
