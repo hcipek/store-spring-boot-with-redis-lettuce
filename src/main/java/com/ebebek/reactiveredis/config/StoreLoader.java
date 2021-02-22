@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 
 @Component
-@EnableScheduling
 public class StoreLoader {
     private final RedisConnectionFactory factory;
 
