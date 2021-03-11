@@ -1,5 +1,8 @@
 package com.ebebek.reactiveredis.config;
 
+
+import com.ebebek.reactiveredis.model.listener.RedisMessageListener;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.listener.ChannelTopic;
@@ -21,6 +24,7 @@ public class StoreConfiguration {
                 .build();
 
         RedisStandaloneConfiguration serverConfig = new RedisStandaloneConfiguration("server", 6379);
+
 
         return new LettuceConnectionFactory(serverConfig, clientConfig);
     }

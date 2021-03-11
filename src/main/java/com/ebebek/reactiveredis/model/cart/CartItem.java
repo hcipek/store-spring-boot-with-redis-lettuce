@@ -1,5 +1,6 @@
 package com.ebebek.reactiveredis.model.cart;
 
+import com.ebebek.reactiveredis.model.BaseModel;
 import com.ebebek.reactiveredis.model.product.Product;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,7 +11,7 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CartItem implements Serializable {
+public class CartItem extends BaseModel {
 
     private Product product;
     private int count;
