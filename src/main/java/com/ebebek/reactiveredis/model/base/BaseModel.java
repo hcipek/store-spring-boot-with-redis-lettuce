@@ -1,4 +1,4 @@
-package com.ebebek.reactiveredis.model;
+package com.ebebek.reactiveredis.model.base;
 
 import java.io.Serializable;
 

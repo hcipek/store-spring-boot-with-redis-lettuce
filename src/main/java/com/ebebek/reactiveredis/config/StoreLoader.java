@@ -7,6 +7,7 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -19,8 +20,6 @@ import javax.annotation.PostConstruct;
 @EnableScheduling
 public class StoreLoader {
     private final RedisConnectionFactory factory;
-
-    private RedisTemplate redisTemplate;
 
     public StoreLoader(RedisConnectionFactory factory) {
         this.factory = factory;
@@ -54,6 +53,7 @@ public class StoreLoader {
     }
 
     @Bean
+    @Primary
     public RedisTemplate redisTemplate(RedisConnectionFactory factory) {
         final RedisTemplate template = new RedisTemplate();
         template.setConnectionFactory(factory);
@@ -68,7 +68,7 @@ public class StoreLoader {
     @Bean
     public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory factory) {
         final StringRedisTemplate template = new StringRedisTemplate(factory);
-        template.setValueSerializer(serializerSetup());
+//        template.setValueSerializer(serializerSetup());
         template.afterPropertiesSet();
 
         return template;
