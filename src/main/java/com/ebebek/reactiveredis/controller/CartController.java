@@ -56,4 +56,14 @@ public class CartController {
     public CartResponse addOrIncreaseProductCount(@RequestBody ProductRequest request) {
         return cartService.addOrIncreaseProductCount(request);
     }
+
+    @PostMapping("/addProductToCart")
+    public CartResponse addProductToCart(@RequestBody ProductRequest request) {
+        return cartService.addProductToCart(request);
+    }
+
+    @PostMapping("/addOrIncreaseProductCount")
+    public CartResponse addOrIncreaseProductCount(@RequestBody ProductRequest request) {
+        return cartService.addOrIncreaseProductCount(request);
+    }
 }
