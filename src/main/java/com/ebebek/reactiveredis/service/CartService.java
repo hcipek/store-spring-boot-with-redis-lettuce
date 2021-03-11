@@ -1,98 +1,131 @@
 package com.ebebek.reactiveredis.service;
 
 import com.ebebek.reactiveredis.model.cart.Cart;
+import com.ebebek.reactiveredis.model.cart.CartItem;
 import com.ebebek.reactiveredis.model.cart.CartRequest;
 import com.ebebek.reactiveredis.model.cart.CartResponse;
+import com.ebebek.reactiveredis.model.product.Product;
 import com.ebebek.reactiveredis.model.product.ProductRequest;
+import com.ebebek.reactiveredis.repo.CartRepository;
 import com.ebebek.reactiveredis.util.ResponseCodesUtil;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.serializer.GenericToStringSerializer;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
-public class CartService extends BaseService<Cart> {
+public class CartService extends BaseService {
 
-    // string based redis template
+    private static final String CARTS_KEY = "Carts";
+
     @Autowired
-    private StringRedisTemplate stringRedisTemplate;
-    // string based redis template
+    private ProductService productService;
+
+    @Autowired
+    private CartRepository cartRepository;
 
     private HashOperations<String, String, Cart> hashOperations;
 
     public CartService(RedisTemplate redisTemplate) {
-        redisTemplate.setHashValueSerializer(serializerSetup(new Cart()));
+        redisTemplate.setHashValueSerializer(serializerSetup());
         hashOperations = redisTemplate.opsForHash();
     }
 
-    private static final String CARTS_KEY = "Carts";
-
-    public CartResponse createCart(@RequestBody CartRequest request) {
+    public CartResponse createCart(CartRequest request) {
         Cart cart = request.getCart();
-        cart.setId(UUID.randomUUID().toString());
-        Map<String, Cart> cartMap = Stream.of(
-                new AbstractMap.SimpleEntry<>(cart.getId(), cart)
-        ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        hashOperations.putAll(CARTS_KEY, cartMap);
+        cart = cartRepository.save(cart);
         return new CartResponse(Collections.singletonList(cart), ResponseCodesUtil.SUCCESS.message, ResponseCodesUtil.SUCCESS.code);
     }
 
     public List<Cart> getAllCarts() {
-        return hashOperations.values(CARTS_KEY);
+        return cartRepository.findAll();
     }
 
-    public Cart getCartById(@RequestParam("id") String id) {
-        return hashOperations.get(CARTS_KEY, id);
+    public Cart getCartById(String id) {
+        return cartRepository.findById(id);
     }
 
-    public CartResponse modifyCart(@RequestBody CartRequest request) {
-        hashOperations.put(CARTS_KEY, request.getCart().getId(), request.getCart());
-        return new CartResponse(null, ResponseCodesUtil.SUCCESS.message, ResponseCodesUtil.SUCCESS.code);
+    public CartResponse modifyCart(CartRequest request) {
+        cartRepository.save(request.getCart());
+        return new CartResponse(Collections.singletonList(request.getCart()), ResponseCodesUtil.SUCCESS.message, ResponseCodesUtil.SUCCESS.code);
     }
 
-    public CartResponse incrementProductCount(@RequestBody ProductRequest request) {
+    public CartResponse incrementProductCount(ProductRequest request) {
         return changeProductCount(request, IncDec.INC);
     }
 
-    public CartResponse decrementProductCount(@RequestBody ProductRequest request) {
+    public CartResponse decrementProductCount(ProductRequest request) {
         return changeProductCount(request, IncDec.DEC);
     }
 
     private CartResponse changeProductCount(ProductRequest request, IncDec incDec) {
-        Cart cart = hashOperations.get(CARTS_KEY, request.getCartId());
+        Cart cart = cartRepository.findById(request.getCartId());
 
         switch(incDec) {
             case INC :
                 cart.getCartItemList().stream()
                         .filter(e -> e.getProduct().getId().equals(request.getProductId()))
-                        .findFirst()
-                        .get()
+                        .findFirst().orElse(new CartItem())
                         .increment();
                 break;
             case DEC :
                 cart.getCartItemList().stream()
                         .filter(e -> e.getProduct().getId().equals(request.getProductId()))
-                        .findFirst()
-                        .get()
+                        .findFirst().orElse(new CartItem())
                         .decrement();
                 break;
         }
 
         cart.refresh();
-        redisTemplate.opsForHash().put(CARTS_KEY, cart.getId(), cart);
-        return new CartResponse(null, ResponseCodesUtil.SUCCESS.message, ResponseCodesUtil.SUCCESS.code);
+        cartRepository.save(cart);
+        return new CartResponse(Collections.singletonList(cart), ResponseCodesUtil.SUCCESS.message, ResponseCodesUtil.SUCCESS.code);
+    }
+
+    public CartResponse addProductToCart(ProductRequest request) {
+        Product product = productService.getProductById(request.getProductId());
+        Cart cart = null;
+
+        if(product == null) {
+            return new CartResponse(null, ResponseCodesUtil.ERROR.message, ResponseCodesUtil.ERROR.code);
+        }
+
+        if(request.getCartId() != null) {
+            cart = cartRepository.findById(request.getCartId());
+            if(cart == null) {
+                return new CartResponse(null, ResponseCodesUtil.ERROR.message, ResponseCodesUtil.ERROR.code);
+            }
+        } else {
+            cart = new Cart();
+        }
+        CartItem cartItem = new CartItem();
+        cartItem.setProduct(product);
+        cartItem.setCount(1);
+        cart.addCartItem(cartItem);
+        cart = cartRepository.save(cart);
+
+        return new CartResponse(Collections.singletonList(cart), ResponseCodesUtil.SUCCESS.message, ResponseCodesUtil.SUCCESS.code);
+    }
+
+    public CartResponse addOrIncreaseProductCount(ProductRequest request) {
+        if(request.getCartId() == null) {
+            return addProductToCart(request);
+        }
+        Cart cart = cartRepository.findById(request.getCartId());
+        if(cart == null) {
+            return addProductToCart(request);
+        }
+        boolean isProductExists = cart.getCartItemList().stream()
+                .filter(e -> e.getProduct().getId().equals(request.getProductId()))
+                .findFirst()
+                .isPresent();
+        if(isProductExists) {
+            return incrementProductCount(request);
+        } else {
+            return addProductToCart(request);
+        }
     }
 
     enum IncDec {

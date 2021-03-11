@@ -21,6 +21,7 @@ public class CartItem extends BaseModel {
     }
 
     public void decrement() {
-        count--;
+        if(count > 0)
+            count--;
     }
 }

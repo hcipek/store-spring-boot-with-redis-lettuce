@@ -6,12 +6,14 @@ import com.ebebek.reactiveredis.model.store.StoreResponse;
 import com.ebebek.reactiveredis.model.ui.store.UIStoreRequest;
 import com.ebebek.reactiveredis.util.ResponseCodesUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import springfox.documentation.annotations.Cacheable;
 
 import java.util.Collection;
 import java.util.List;
@@ -19,7 +21,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class StoreService extends BaseService<Store> {
+@EnableCaching
+public class StoreService extends BaseService {
 
     @Autowired
     private RestTemplate restTemplate;
@@ -31,7 +34,7 @@ public class StoreService extends BaseService<Store> {
     private static final String STORE_KEY = "Stores";
 
     public StoreService(RedisTemplate redisTemplate) {
-        redisTemplate.setHashValueSerializer(serializerSetup(new Store()));
+        redisTemplate.setHashValueSerializer(serializerSetup());
         hashOperations = redisTemplate.opsForHash();
         listOperations = redisTemplate.opsForList();
         valueOperations = redisTemplate.opsForValue();
@@ -48,6 +51,7 @@ public class StoreService extends BaseService<Store> {
      * onSave when a data inserted another project sends data to this method and sets the value
      * onUpdate when a data updated another project sends data to this method and sets the value
      */
+    @Cacheable(STORE_KEY + "_Values")
     public List<Store> getAll() {
         StoreResponse response = restTemplate.getForObject("http://localhost:9081/api/store/getall", StoreResponse.class);
         multiSetValues(response.getResults());
