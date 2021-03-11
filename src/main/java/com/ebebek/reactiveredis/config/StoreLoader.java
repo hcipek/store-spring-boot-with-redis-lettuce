@@ -21,6 +21,8 @@ import javax.annotation.PostConstruct;
 public class StoreLoader {
     private final RedisConnectionFactory factory;
 
+    private RedisTemplate redisTemplate;
+
     public StoreLoader(RedisConnectionFactory factory) {
         this.factory = factory;
     }

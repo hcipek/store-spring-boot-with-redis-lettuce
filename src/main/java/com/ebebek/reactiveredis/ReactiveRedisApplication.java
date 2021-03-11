@@ -13,6 +13,7 @@ public class ReactiveRedisApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(ReactiveRedisApplication.class, args);
+//		new AnnotationConfigApplicationContext(PubSubConfig.class);
 	}
 
 	@Bean
