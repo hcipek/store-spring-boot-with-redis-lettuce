@@ -66,16 +66,10 @@ public class CartService extends BaseService {
 
         switch(incDec) {
             case INC :
-                cart.getCartItemList().stream()
-                        .filter(e -> e.getProduct().getId().equals(request.getProductId()))
-                        .findFirst().orElse(new CartItem())
-                        .increment();
+                getCartItemByProductId(cart.getCartItemList(), request.getProductId()).increment();
                 break;
             case DEC :
-                cart.getCartItemList().stream()
-                        .filter(e -> e.getProduct().getId().equals(request.getProductId()))
-                        .findFirst().orElse(new CartItem())
-                        .decrement();
+                getCartItemByProductId(cart.getCartItemList(), request.getProductId()).decrement();
                 break;
         }
 
@@ -117,15 +111,23 @@ public class CartService extends BaseService {
         if(cart == null) {
             return addProductToCart(request);
         }
-        boolean isProductExists = cart.getCartItemList().stream()
-                .filter(e -> e.getProduct().getId().equals(request.getProductId()))
-                .findFirst()
-                .isPresent();
+        boolean isProductExists = getOptionalCartItemByProductId(cart.getCartItemList(), request.getProductId()).isPresent();
         if(isProductExists) {
             return incrementProductCount(request);
         } else {
             return addProductToCart(request);
         }
+    }
+
+    private CartItem getCartItemByProductId(List<CartItem> cartItemList, Long productId) {
+        Optional<CartItem> optional = getOptionalCartItemByProductId(cartItemList, productId);
+        return optional.isPresent() ? optional.get() : new CartItem();
+    }
+
+    private Optional<CartItem> getOptionalCartItemByProductId(List<CartItem> cartItemList, Long productId) {
+        return cartItemList.stream()
+                .filter(e -> e.getProduct().getId().equals(productId))
+                .findFirst();
     }
 
     enum IncDec {
